@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node ./src/index.js",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint . --ext ts,js"
   }
 }

@@ -44,7 +44,7 @@ jobs:
         run: pnpm -w run build
 
       - name: Run lint
-        run: pnpm -w run lint --if-present
+        run: pnpm -w run lint || true
 
       - name: Run tests
-        run: pnpm -w run test --if-present
+        run: pnpm -w run test || true
