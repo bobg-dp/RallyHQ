@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-ssr
+*.local
+.turbo
+.cache
+.pnpm-debug.log
+.pnpmfile.cjs
+.pnpm-store

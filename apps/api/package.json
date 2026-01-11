@@ -1,0 +1,9 @@
+{
+  "name": "@rallyhq/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node ./src/index.js",
+    "build": "tsc -p tsconfig.json"
+  }
+}

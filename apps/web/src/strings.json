@@ -1,0 +1,63 @@
+{
+  "seo": {
+    "mainPage": {
+      "title": "Relacje, wyniki online z imprez motorsportu | RallyHQ",
+      "description": "Wystartuj lub sprawdz wyniki na żywo KJS, Rajdu czy innej imprezy motorsportu"
+    }
+  },
+  "common": {
+    "privacyPolicy": "polityka prywatności",
+    "iAgree": "Akceptuję postawnowienia",
+    "termsOfService": "regulaminu seriwsu",
+    "and": "i",
+    "createAccount": "Załóż konto",
+    "haveAnAccount": "Masz już konto?",
+    "signIn": "Zaloguj się",
+    "successfullyLoggedIn": "Pomyślnie zalogowano!"
+  },
+  "pages": {
+    "mainPage": {
+      "labelTop": {
+        "first": "Najlbiższe imprezy",
+        "second": "Znajdz wydarzenie, którego szukasz. Użyj filtrów lub wyszukiwarki."
+      }
+    },
+    "singup": {
+      "title": "Załóż swoje konto już teraz",
+      "description": "Z kontem będziesz miał dostęp do szybkich zapisów",
+      "form": {
+        "confirmPassword": "Potwierdz hasło",
+        "confirmPasswordHint": "Potwierdz swoje hasło"
+      }
+    },
+    "login": {
+      "title": "Witamy z powrotem",
+      "description": "Najlepsze miejsce zapisów na zawody motorsportowe. Zaloguj sie i tylko krok dzieli Cię od kolejnej imprezy.",
+      "mobileTitle": "Witaj ponownie",
+      "mobileDescription": "Zaloguj się do swojego konta",
+      "noAccount": "Nie masz konta?",
+      "form": {
+        "rememberMe": "Zapamiętaj mnie",
+        "forgotPassword": "Zapomniałeś hasła?",
+        "signIn": "Zaloguj się",
+        "signingIn": "Logowanie..."
+      }
+    }
+  },
+  "components": {
+    "newsletter": {
+      "title": "Nie ma imprezy której szukasz?",
+      "description": "Zapisz się do newslettera, poinformujemy Cię o każdej nowej imprezie",
+      "hint": "Adres email",
+      "buttonText": "Zapisz się"
+    },
+    "loginForm": {
+      "email": "Adres Email",
+      "emailHint": "Twój email",
+      "errorWrongEmail": "Proszę podać poprawny adres email",
+      "password": "Hasło",
+      "passwordHint": "Wpisz swoje hasło",
+      "errorPasswordSize": "Hasło musi mieć od 6 do 20 znaków"
+    }
+  }
+}
