@@ -17,6 +17,8 @@ importers:
 
   apps/api: {}
 
+  apps/functions: {}
+
   apps/web:
     dependencies:
       '@hookform/resolvers':

@@ -1,0 +1,9 @@
+{
+  "name": "@rallyhq/functions",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Supabase Edge Functions - Deno/TypeScript serverless functions",
+  "scripts": {
+    "dev": "cd ../.. && supabase functions serve --no-verify-jwt"
+  }
+}

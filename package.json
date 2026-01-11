@@ -9,9 +9,14 @@
   "packageManager": "pnpm@8.11.0",
   "scripts": {
     "dev": "turbo run dev --parallel",
+    "dev:functions": "turbo run dev --parallel --filter=@rallyhq/web --filter=@rallyhq/functions",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "postinstall": "turbo run postinstall"
+    "postinstall": "turbo run postinstall",
+    "supabase:start": "supabase start",
+    "supabase:functions:dev": "supabase functions serve --no-verify-jwt",
+    "supabase:functions:list": "supabase functions list",
+    "supabase:functions:deploy": "supabase functions deploy"
   },
   "devDependencies": {
     "supabase": "^2.72.4",

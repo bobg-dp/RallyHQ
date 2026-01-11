@@ -2,16 +2,19 @@
 
 Monorepo setup using Turborepo. Apps and packages:
 
-- apps/web — frontend (existing project moved from `app/web`)
-- apps/api — placeholder backend app
+- apps/web — frontend (Vite + React + TypeScript)
+- apps/api — backend proxy API (Node.js + Express)
+- apps/functions — Supabase Edge Functions (Deno + TypeScript)
 - packages/ui — shared UI package
-- supabase/ — Supabase project (DB and functions), already initialized
+- supabase/ — Supabase project configuration (DB migrations, config.toml)
 
 Quick start
 
 1. pnpm install
-2. pnpm -w run dev    # runs `vite` for `apps/web` and placeholder `apps/api` via Turborepo
-3. Use Supabase locally: `supabase start` in a separate terminal or leave the existing service running
+2. pnpm run supabase:start    # Start Supabase services (DB, Studio, Auth, etc.)
+3. pnpm run dev:functions     # Start web app + Edge Functions together via Turborepo
+   
+   Or run everything: `pnpm run dev`
 
 Optional
 
