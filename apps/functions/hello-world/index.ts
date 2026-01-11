@@ -1,4 +1,4 @@
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   try {
     const body = await req.json().catch(() => ({}));
 
