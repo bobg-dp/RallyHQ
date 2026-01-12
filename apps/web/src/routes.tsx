@@ -14,6 +14,7 @@ import Blog from "./pages/blog";
 import Docs from "./pages/docs";
 import ErrorPage from "./pages/error";
 import Home from "./pages/home";
+import AuthCallback from "./pages/auth-callback";
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +41,10 @@ export const router = createBrowserRouter([
       {
         path: "/rejestracja",
         element: <Signup />,
+      },
+      {
+        path: "/auth/callback",
+        element: <AuthCallback />,
       },
       {
         path: "/pricing",

@@ -23,3 +23,5 @@ Optional
 CI
 
 - This repo includes a GitHub Actions workflow at `.github/workflows/ci.yml` that runs on push and pull requests to `main` and uses pnpm. It caches the pnpm store and the Turborepo cache to speed up CI.
+
+Inbucket (http://127.0.0.1:54324).

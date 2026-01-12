@@ -6,8 +6,9 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
   avatar?: string;
+  emailConfirmed?: boolean;
 }
 
 interface AuthState {
@@ -44,7 +45,9 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken;
-      state.isAuthenticated = !!action.payload.token;
+      // Only authenticate if email is verified
+      state.isAuthenticated =
+        !!action.payload.token && action.payload.user.emailConfirmed !== false;
       state.loading = false;
       state.error = null;
     },
@@ -89,7 +92,10 @@ const authSlice = createSlice({
           state.user = action.payload.user;
           state.token = action.payload.token;
           state.refreshToken = action.payload.refreshToken;
-          state.isAuthenticated = true;
+          // Only authenticate if email is verified
+          state.isAuthenticated =
+            !!action.payload.token &&
+            action.payload.user.emailConfirmed !== false;
         }
       )
       .addCase(register.rejected, (state, action) => {

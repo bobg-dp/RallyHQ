@@ -26,6 +26,7 @@ export default function App() {
       const session = (data as any)?.session;
 
       if (session) {
+        const emailConfirmed = session.user?.email_confirmed_at !== null;
         dispatch(
           setCredentials({
             user: {
@@ -33,6 +34,7 @@ export default function App() {
               email: session.user?.email ?? "",
               name: session.user?.user_metadata?.name ?? "",
               role: "user",
+              emailConfirmed,
             },
             token: session.access_token ?? "",
             refreshToken: session.refresh_token ?? "",
@@ -46,8 +48,10 @@ export default function App() {
     // Subscribe to auth changes and keep Redux in sync
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (event === "SIGNED_IN" && session) {
+        // Handle sign in and email verification (TOKEN_REFRESHED happens after email verification)
+        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
           const s = session as any;
+          const emailConfirmed = s.user?.email_confirmed_at !== null;
           dispatch(
             setCredentials({
               user: {
@@ -55,6 +59,7 @@ export default function App() {
                 email: s.user?.email ?? "",
                 name: s.user?.user_metadata?.name ?? "",
                 role: "user",
+                emailConfirmed,
               },
               token: s.access_token ?? "",
               refreshToken: s.refresh_token ?? "",

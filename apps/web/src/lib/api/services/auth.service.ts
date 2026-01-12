@@ -16,6 +16,7 @@ export interface AuthResponse {
     name: string;
     role: "user" | "admin";
     avatar?: string;
+    emailConfirmed?: boolean;
   };
   token: string;
   refreshToken: string;
@@ -25,6 +26,7 @@ function mapSupabaseUserToAuthResponse(session: any): AuthResponse {
   const user = session?.user;
   const accessToken = session?.access_token ?? session?.accessToken ?? "";
   const refreshToken = session?.refresh_token ?? session?.refreshToken ?? "";
+  const emailConfirmed = user?.email_confirmed_at !== null;
 
   return {
     user: {
@@ -33,6 +35,7 @@ function mapSupabaseUserToAuthResponse(session: any): AuthResponse {
       name: (user?.user_metadata?.name ?? user?.user_metadata?.full_name) || "",
       role: "user",
       avatar: user?.user_metadata?.avatar ?? undefined,
+      emailConfirmed,
     },
     token: accessToken,
     refreshToken: refreshToken,
@@ -58,6 +61,7 @@ const authService = {
       email: data.email,
       password: data.password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           name: data.name,
         },
@@ -74,12 +78,14 @@ const authService = {
     }
 
     // For cases where user must confirm email, return a placeholder response (no tokens)
+    // Explicitly set emailConfirmed: false to block access
     return {
       user: {
         id: (res as any)?.user?.id ?? "",
         email: (res as any)?.user?.email ?? data.email,
         name: data.name,
         role: "user",
+        emailConfirmed: false,
       },
       token: "",
       refreshToken: "",
