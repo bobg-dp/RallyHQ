@@ -9,7 +9,8 @@
   "packageManager": "pnpm@8.11.0",
   "scripts": {
     "dev": "turbo run dev --parallel",
-    "dev:functions": "turbo run dev --parallel --filter=@rallyhq/web --filter=@rallyhq/functions",
+    "dev:web": "pnpm --filter=@rallyhq/web dev",
+    "dev:functions": "supabase functions serve --no-verify-jwt",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "postinstall": "turbo run postinstall",
