@@ -1,6 +1,6 @@
-import Seo from '../components/Seo';
-import { motion } from "framer-motion";
+import Seo from "../components/Seo";
 import YourProfile from "@/components/custom/YourProfile";
+import Codrivers from "@/components/custom/Codrivers";
 
 export default function Dashboard() {
   return (
@@ -15,15 +15,7 @@ export default function Dashboard() {
             <div className="max-w-7xl mx-auto">
               <div className="grid md:grid-cols-2 gap-8">
                 <YourProfile />
-                <motion.article
-                  key="dasdss"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
-                  className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-                >
-                  dashboard
-                </motion.article>
+                <Codrivers />
               </div>
             </div>
           </div>
