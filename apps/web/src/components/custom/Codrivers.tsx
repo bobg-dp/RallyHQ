@@ -40,6 +40,7 @@ export default function Codrivers() {
 
   const [newCodriver, setNewCodriver] = useState<Codriver>(initialCodriver);
   const [showForm, setShowForm] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const handleInput = (field: keyof Codriver, value: string | boolean) => {
     setNewCodriver((prev) => ({
@@ -51,7 +52,18 @@ export default function Codrivers() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (newCodriver.name && newCodriver.email && newCodriver.phone) {
-      setCodrivers((prev) => [...prev, newCodriver]);
+      if (editingIndex !== null) {
+        // Tryb edycji - aktualizuj istniejącego codrivera
+        setCodrivers((prev) =>
+          prev.map((codriver, index) =>
+            index === editingIndex ? newCodriver : codriver
+          )
+        );
+        setEditingIndex(null);
+      } else {
+        // Tryb dodawania - dodaj nowego codrivera
+        setCodrivers((prev) => [...prev, newCodriver]);
+      }
       setNewCodriver(initialCodriver);
       setShowForm(false);
     }
@@ -59,6 +71,12 @@ export default function Codrivers() {
 
   const handleRemove = (index: number) => {
     setCodrivers((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEdit = (index: number) => {
+    setNewCodriver(codrivers[index]);
+    setEditingIndex(index);
+    setShowForm(true);
   };
 
   return (
@@ -127,7 +145,15 @@ export default function Codrivers() {
                   </Label>
                 </div>
               </div>
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(index)}
+                >
+                  Edytuj
+                </Button>
                 <Button
                   type="button"
                   variant="destructive"
@@ -156,103 +182,110 @@ export default function Codrivers() {
 
       {/* Formularz dodawania Codrivera */}
       {showForm && (
-      <motion.article
-        key="add-codriver"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-        className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow p-4"
-      >
-        <h2 className="text-lg font-semibold mb-4">Dodaj Pilota</h2>
+        <motion.article
+          key="add-codriver"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow p-4"
+        >
+          <h2 className="text-lg font-semibold mb-4">
+            {editingIndex !== null ? "Edytuj Pilota" : "Dodaj Pilota"}
+          </h2>
 
-        <form className="grid grid-cols-1 gap-3" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="name">Imię i nazwisko *</Label>
-              <Input
-                id="name"
-                value={newCodriver.name}
-                onChange={(e) => handleInput("name", e.target.value)}
-                required
-              />
+          <form className="grid grid-cols-1 gap-3" onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="codriver-name">Imię i nazwisko *</Label>
+                <Input
+                  id="codriver-name"
+                  value={newCodriver.name}
+                  onChange={(e) => handleInput("name", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="codriver-club">Klub</Label>
+                <Input
+                  id="codriver-club"
+                  value={newCodriver.club}
+                  onChange={(e) => handleInput("club", e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="codriver-birthDate">Data urodzenia</Label>
+                <Input
+                  id="codriver-birthDate"
+                  value={newCodriver.birthDate}
+                  onChange={(e) => handleInput("birthDate", e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="codriver-drivingLicenseNumber">
+                  Numer prawa jazdy
+                </Label>
+                <Input
+                  id="codriver-drivingLicenseNumber"
+                  value={newCodriver.drivingLicenseNumber}
+                  onChange={(e) =>
+                    handleInput("drivingLicenseNumber", e.target.value)
+                  }
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-6">
+                <Checkbox
+                  id="codriver-sportsLicense"
+                  checked={newCodriver.sportsLicense}
+                  onCheckedChange={(checked) =>
+                    handleInput("sportsLicense", Boolean(checked))
+                  }
+                />
+                <Label htmlFor="codriver-sportsLicense">
+                  Posiadam licencję sportową
+                </Label>
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="club">Klub</Label>
-              <Input
-                id="club"
-                value={newCodriver.club}
-                onChange={(e) => handleInput("club", e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="birthDate">Data urodzenia</Label>
-              <Input
-                id="birthDate"
-                value={newCodriver.birthDate}
-                onChange={(e) => handleInput("birthDate", e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="drivingLicenseNumber">Numer prawa jazdy</Label>
-              <Input
-                id="drivingLicenseNumber"
-                value={newCodriver.drivingLicenseNumber}
-                onChange={(e) =>
-                  handleInput("drivingLicenseNumber", e.target.value)
-                }
-              />
-            </div>
-            <div className="flex items-center gap-2 pt-6">
-              <Checkbox
-                id="sportsLicense"
-                checked={newCodriver.sportsLicense}
-                onCheckedChange={(checked) =>
-                  handleInput("sportsLicense", Boolean(checked))
-                }
-              />
-              <Label htmlFor="sportsLicense">Posiadam licencję sportową</Label>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newCodriver.email}
-                onChange={(e) => handleInput("email", e.target.value)}
-                required
-              />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="codriver-email">Email *</Label>
+                <Input
+                  id="codriver-email"
+                  type="email"
+                  value={newCodriver.email}
+                  onChange={(e) => handleInput("email", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="codriver-phone">Telefon *</Label>
+                <Input
+                  id="codriver-phone"
+                  value={newCodriver.phone}
+                  onChange={(e) => handleInput("phone", e.target.value)}
+                  required
+                />
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="phone">Telefon *</Label>
-              <Input
-                id="phone"
-                value={newCodriver.phone}
-                onChange={(e) => handleInput("phone", e.target.value)}
-                required
-              />
-            </div>
-          </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setNewCodriver(initialCodriver);
-                setShowForm(false);
-              }}
-            >
-              Anuluj
-            </Button>
-            <Button type="submit" variant="default">
-              Dodaj Pilota
-            </Button>
-          </div>
-        </form>
-      </motion.article>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setNewCodriver(initialCodriver);
+                  setEditingIndex(null);
+                  setShowForm(false);
+                }}
+              >
+                Anuluj
+              </Button>
+              <Button type="submit" variant="default">
+                {editingIndex !== null ? "Zapisz zmiany" : "Dodaj Pilota"}
+              </Button>
+            </div>
+          </form>
+        </motion.article>
       )}
     </div>
   );
