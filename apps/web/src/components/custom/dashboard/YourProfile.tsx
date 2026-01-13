@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { IoIosMail } from "react-icons/io";
-import { MdPhoneIphone } from "react-icons/md";
 
 const initialProfile = {
   name: "Robert Grabiński",
