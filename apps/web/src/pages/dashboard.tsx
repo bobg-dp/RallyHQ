@@ -1,6 +1,7 @@
 import Seo from "../components/Seo";
-import YourProfile from "@/components/custom/YourProfile";
-import Codrivers from "@/components/custom/Codrivers";
+import YourProfile from "@/components/custom/dashboard/YourProfile";
+import Codrivers from "@/components/custom/dashboard/Codrivers";
+import Cars from "@/components/custom/dashboard/Cars";
 
 export default function Dashboard() {
   return (
@@ -16,6 +17,7 @@ export default function Dashboard() {
               <div className="grid md:grid-cols-2 gap-8">
                 <YourProfile />
                 <Codrivers />
+                <Cars />
               </div>
             </div>
           </div>
