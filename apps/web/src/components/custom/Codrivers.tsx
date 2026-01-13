@@ -4,6 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Codriver = {
   name: string;
@@ -41,6 +51,8 @@ export default function Codrivers() {
   const [newCodriver, setNewCodriver] = useState<Codriver>(initialCodriver);
   const [showForm, setShowForm] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleInput = (field: keyof Codriver, value: string | boolean) => {
     setNewCodriver((prev) => ({
@@ -71,6 +83,13 @@ export default function Codrivers() {
 
   const handleRemove = (index: number) => {
     setCodrivers((prev) => prev.filter((_, i) => i !== index));
+    setShowDeleteDialog(false);
+    setDeleteIndex(null);
+  };
+
+  const openDeleteDialog = (index: number) => {
+    setDeleteIndex(index);
+    setShowDeleteDialog(true);
   };
 
   const handleEdit = (index: number) => {
@@ -81,6 +100,35 @@ export default function Codrivers() {
 
   return (
     <div className="space-y-4">
+      {/* Dialog potwierdzenia usunięcia */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Czy na pewno chcesz usunąć pilota?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteIndex !== null && (
+                <>
+                  Zamierzasz usunąć pilota:{" "}
+                  <strong>{codrivers[deleteIndex]?.name}</strong>. Ta operacja
+                  jest nieodwracalna.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteIndex !== null && handleRemove(deleteIndex)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Usuń
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Lista Codriverów */}
       <motion.article
         key="codrivers-list"
@@ -158,7 +206,7 @@ export default function Codrivers() {
                   type="button"
                   variant="destructive"
                   size="sm"
-                  onClick={() => handleRemove(index)}
+                  onClick={() => openDeleteDialog(index)}
                 >
                   Usuń
                 </Button>
