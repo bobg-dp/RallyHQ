@@ -88,7 +88,7 @@ export default function Login() {
               <div className="text-center mb-8 md:hidden">
                 <Link to="/">
                   <Text
-                    label="SaaSify"
+                    label="RallyQH"
                     className="text-3xl font-bold text-primary mb-2"
                   />
                 </Link>
@@ -122,6 +122,7 @@ export default function Login() {
                       <div className="relative">
                         <Input
                           id="email"
+                          autoComplete="username"
                           className={cn(
                             "w-full transition-all duration-200",
                             errors.email
@@ -180,6 +181,7 @@ export default function Login() {
                       <div className="relative">
                         <Input
                           id="password"
+                          autoComplete="current-password"
                           className={cn(
                             "w-full transition-all duration-200",
                             errors.password

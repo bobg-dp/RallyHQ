@@ -60,7 +60,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <motion.div
-                key={link.to}
+                key={`${link.label}-nav-link`}
                 whileHover={{ y: -2 }}
                 whileTap={{ y: 0 }}
               >
