@@ -157,13 +157,13 @@ export default function Codrivers() {
 
   const handleEdit = (codriver: Codriver) => {
     setNewCodriver({
-      name: codriver.name,
-      club: codriver.club,
-      birthDate: codriver.birthDate,
-      drivingLicenseNumber: codriver.drivingLicenseNumber,
-      sportsLicense: codriver.sportsLicense,
-      email: codriver.email,
-      phone: codriver.phone,
+      name: codriver.name ?? "",
+      club: codriver.club ?? "",
+      birthDate: codriver.birthDate ?? "",
+      drivingLicenseNumber: codriver.drivingLicenseNumber ?? "",
+      sportsLicense: codriver.sportsLicense ?? false,
+      email: codriver.email ?? "",
+      phone: codriver.phone ?? "",
     });
     setEditingId(codriver.id || null);
     setShowForm(true);
@@ -332,7 +332,7 @@ export default function Codrivers() {
                 <Label htmlFor="codriver-name">Imię i nazwisko *</Label>
                 <Input
                   id="codriver-name"
-                  value={newCodriver.name}
+                  value={newCodriver.name ?? ""}
                   onChange={(e) => handleInput("name", e.target.value)}
                   required
                 />
@@ -341,7 +341,7 @@ export default function Codrivers() {
                 <Label htmlFor="codriver-club">Klub</Label>
                 <Input
                   id="codriver-club"
-                  value={newCodriver.club}
+                  value={newCodriver.club ?? ""}
                   onChange={(e) => handleInput("club", e.target.value)}
                 />
               </div>
@@ -349,7 +349,7 @@ export default function Codrivers() {
                 <Label htmlFor="codriver-birthDate">Data urodzenia</Label>
                 <Input
                   id="codriver-birthDate"
-                  value={newCodriver.birthDate}
+                  value={newCodriver.birthDate ?? ""}
                   onChange={(e) => handleInput("birthDate", e.target.value)}
                 />
               </div>
@@ -359,7 +359,7 @@ export default function Codrivers() {
                 </Label>
                 <Input
                   id="codriver-drivingLicenseNumber"
-                  value={newCodriver.drivingLicenseNumber}
+                  value={newCodriver.drivingLicenseNumber ?? ""}
                   onChange={(e) =>
                     handleInput("drivingLicenseNumber", e.target.value)
                   }
@@ -385,7 +385,7 @@ export default function Codrivers() {
                 <Input
                   id="codriver-email"
                   type="email"
-                  value={newCodriver.email}
+                  value={newCodriver.email ?? ""}
                   onChange={(e) => handleInput("email", e.target.value)}
                   required
                 />
@@ -394,7 +394,7 @@ export default function Codrivers() {
                 <Label htmlFor="codriver-phone">Telefon *</Label>
                 <Input
                   id="codriver-phone"
-                  value={newCodriver.phone}
+                  value={newCodriver.phone ?? ""}
                   onChange={(e) => handleInput("phone", e.target.value)}
                   required
                 />
