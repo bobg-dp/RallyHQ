@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { store } from "@/lib/store";
+import { clearCredentials } from "@/lib/store/slices/authSlice";
 
 export interface Profile {
   name: string;
@@ -20,21 +21,33 @@ export interface Profile {
  * Get authentication token from Redux store or Supabase session
  */
 async function getAuthToken(): Promise<string> {
-  // Try to get token from Redux store first
+  // Prefer session from Supabase to avoid stale tokens
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    throw error;
+  }
+
+  if (session?.access_token) {
+    // Validate session to avoid invalid JWT signature errors
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      await supabase.auth.signOut();
+      store.dispatch(clearCredentials());
+      throw new Error("Not authenticated");
+    }
+    return session.access_token;
+  }
+
+  // Fallback: try to get token from Redux store
   const state = store.getState();
   const token = state.auth?.token;
 
   if (token) {
     return token;
-  }
-
-  // Fallback: try to get session directly from Supabase
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (session?.access_token) {
-    return session.access_token;
   }
 
   throw new Error("Not authenticated");
@@ -76,6 +89,10 @@ export async function getProfile(): Promise<Profile | null> {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        await supabase.auth.signOut();
+        store.dispatch(clearCredentials());
+      }
       const error = await response.json();
       console.log("Error response:", JSON.stringify(error.error));
       throw new Error(error.error || "Failed to fetch profile");
@@ -108,6 +125,10 @@ export async function updateProfile(profile: Profile): Promise<Profile> {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        await supabase.auth.signOut();
+        store.dispatch(clearCredentials());
+      }
       const error = await response.json();
       throw new Error(error.error || "Failed to update profile");
     }

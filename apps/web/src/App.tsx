@@ -1,6 +1,7 @@
 import { RouterProvider } from 'react-router-dom';
 import { router } from './routes';
 import ToastNotification from './components/ui/toast';
+import { Toaster } from '@/components/ui/toaster';
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useAppDispatch } from "@/lib/store";
@@ -90,6 +91,7 @@ export default function App() {
         }}
       />
       <ToastNotification />
+      <Toaster />
     </>
   );
 }

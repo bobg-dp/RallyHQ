@@ -17,13 +17,15 @@ export function handleOptions(req: Request) {
   }
 }
 
-export function getSupabaseClient() {
+export function getSupabaseClient(accessToken?: string) {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  
+  if (!SUPABASE_URL) {
     return {
       error: new Response(
-        JSON.stringify({ error: "Missing Supabase env vars" }),
+        JSON.stringify({ error: "Missing SUPABASE_URL env var" }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -32,8 +34,32 @@ export function getSupabaseClient() {
       client: null,
     };
   }
+
+  // If accessToken is provided, use anon key + set auth header
+  // Otherwise use service role key
+  const key = accessToken ? SUPABASE_ANON_KEY : SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!key) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: "Missing Supabase API key" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      ),
+      client: null,
+    };
+  }
+
+  const client = createClient(SUPABASE_URL, key, {
+    global: {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    },
+  });
+
   return {
-    client: createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY),
+    client,
     error: null,
   };
 }

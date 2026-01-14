@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,18 +14,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  getCodrivers,
+  addCodriver,
+  updateCodriver,
+  deleteCodriver,
+  type Codriver,
+} from "@/lib/api/services/codriver.service";
+import { useToast } from "@/components/ui/use-toast";
 
-type Codriver = {
-  name: string;
-  club: string;
-  birthDate: string;
-  drivingLicenseNumber: string;
-  sportsLicense: boolean;
-  email: string;
-  phone: string;
-};
-
-const initialCodriver: Codriver = {
+const initialCodriver: Omit<
+  Codriver,
+  "id" | "userId" | "createdAt" | "updatedAt"
+> = {
   name: "",
   club: "",
   birthDate: "",
@@ -36,23 +37,37 @@ const initialCodriver: Codriver = {
 };
 
 export default function Codrivers() {
-  const [codrivers, setCodrivers] = useState<Codriver[]>([
-    {
-      name: "Jan Kowalski",
-      club: "Automobilklub Karkonosze",
-      birthDate: "01.01.1990",
-      drivingLicenseNumber: "12345/67/8901",
-      sportsLicense: true,
-      email: "Bob.grabinski@gmail.com",
-      phone: "123456789",
-    },
-  ]);
-
-  const [newCodriver, setNewCodriver] = useState<Codriver>(initialCodriver);
+  const [codrivers, setCodrivers] = useState<Codriver[]>([]);
+  const [newCodriver, setNewCodriver] = useState(initialCodriver);
   const [showForm, setShowForm] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteCodriver_, setDeleteCodriver_] = useState<Codriver | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  // Pobierz codriverów przy montowaniu komponentu
+  useEffect(() => {
+    loadCodrivers();
+  }, []);
+
+  const loadCodrivers = async () => {
+    try {
+      setLoading(true);
+      const data = await getCodrivers();
+      setCodrivers(data);
+    } catch (error) {
+      console.error("Failed to load codrivers:", error);
+      toast({
+        title: "Błąd",
+        description: "Nie udało się załadować pilotów",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInput = (field: keyof Codriver, value: string | boolean) => {
     setNewCodriver((prev) => ({
@@ -61,40 +76,96 @@ export default function Codrivers() {
     }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (newCodriver.name && newCodriver.email && newCodriver.phone) {
-      if (editingIndex !== null) {
-        // Tryb edycji - aktualizuj istniejącego codrivera
-        setCodrivers((prev) =>
-          prev.map((codriver, index) =>
-            index === editingIndex ? newCodriver : codriver
-          )
-        );
-        setEditingIndex(null);
-      } else {
-        // Tryb dodawania - dodaj nowego codrivera
-        setCodrivers((prev) => [...prev, newCodriver]);
+      try {
+        setSubmitting(true);
+
+        if (editingId !== null) {
+          // Tryb edycji - aktualizuj istniejącego codrivera
+          const updatedCodriver = await updateCodriver({
+            ...newCodriver,
+            id: editingId,
+          });
+          setCodrivers((prev) =>
+            prev.map((codriver) =>
+              codriver.id === editingId ? updatedCodriver : codriver
+            )
+          );
+          toast({
+            title: "Sukces",
+            description: "Pilot został zaktualizowany",
+          });
+          setEditingId(null);
+        } else {
+          // Tryb dodawania - dodaj nowego codrivera
+          const newCodriverData = await addCodriver(newCodriver);
+          setCodrivers((prev) => [newCodriverData, ...prev]);
+          toast({
+            title: "Sukces",
+            description: "Pilot został dodany",
+          });
+        }
+
+        setNewCodriver(initialCodriver);
+        setShowForm(false);
+      } catch (error) {
+        console.error("Failed to save codriver:", error);
+        toast({
+          title: "Błąd",
+          description: editingId
+            ? "Nie udało się zaktualizować pilota"
+            : "Nie udało się dodać pilota",
+          variant: "destructive",
+        });
+      } finally {
+        setSubmitting(false);
       }
-      setNewCodriver(initialCodriver);
-      setShowForm(false);
     }
   };
 
-  const handleRemove = (index: number) => {
-    setCodrivers((prev) => prev.filter((_, i) => i !== index));
-    setShowDeleteDialog(false);
-    setDeleteIndex(null);
+  const handleRemove = async () => {
+    if (deleteCodriver_?.id) {
+      try {
+        setSubmitting(true);
+        await deleteCodriver(deleteCodriver_.id);
+        setCodrivers((prev) => prev.filter((c) => c.id !== deleteCodriver_.id));
+        toast({
+          title: "Sukces",
+          description: "Pilot został usunięty",
+        });
+        setShowDeleteDialog(false);
+        setDeleteCodriver_(null);
+      } catch (error) {
+        console.error("Failed to delete codriver:", error);
+        toast({
+          title: "Błąd",
+          description: "Nie udało się usunąć pilota",
+          variant: "destructive",
+        });
+      } finally {
+        setSubmitting(false);
+      }
+    }
   };
 
-  const openDeleteDialog = (index: number) => {
-    setDeleteIndex(index);
+  const openDeleteDialog = (codriver: Codriver) => {
+    setDeleteCodriver_(codriver);
     setShowDeleteDialog(true);
   };
 
-  const handleEdit = (index: number) => {
-    setNewCodriver(codrivers[index]);
-    setEditingIndex(index);
+  const handleEdit = (codriver: Codriver) => {
+    setNewCodriver({
+      name: codriver.name,
+      club: codriver.club,
+      birthDate: codriver.birthDate,
+      drivingLicenseNumber: codriver.drivingLicenseNumber,
+      sportsLicense: codriver.sportsLicense,
+      email: codriver.email,
+      phone: codriver.phone,
+    });
+    setEditingId(codriver.id || null);
     setShowForm(true);
   };
 
@@ -108,22 +179,23 @@ export default function Codrivers() {
               Czy na pewno chcesz usunąć pilota?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteIndex !== null && (
+              {deleteCodriver_ && (
                 <>
                   Zamierzasz usunąć pilota:{" "}
-                  <strong>{codrivers[deleteIndex]?.name}</strong>. Ta operacja
-                  jest nieodwracalna.
+                  <strong>{deleteCodriver_.name}</strong>. Ta operacja jest
+                  nieodwracalna.
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel disabled={submitting}>Anuluj</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteIndex !== null && handleRemove(deleteIndex)}
+              onClick={handleRemove}
+              disabled={submitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Usuń
+              {submitting ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -139,81 +211,93 @@ export default function Codrivers() {
       >
         <h2 className="text-lg font-semibold mb-4">Piloci</h2>
 
-        <div className="space-y-3">
-          {codrivers.map((codriver, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="border border-border rounded-lg p-3 hover:bg-accent/50 transition-colors"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Imię i nazwisko
-                  </p>
-                  <p className="text-base">{codriver.name}</p>
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Ładowanie...
+          </div>
+        ) : codrivers.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Nie masz jeszcze żadnych pilotów. Dodaj pierwszego!
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {codrivers.map((codriver) => (
+              <motion.div
+                key={codriver.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="border border-border rounded-lg p-3 hover:bg-accent/50 transition-colors"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Imię i nazwisko
+                    </p>
+                    <p className="text-base">{codriver.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Klub
+                    </p>
+                    <p className="text-base">{codriver.club}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Data urodzenia
+                    </p>
+                    <p className="text-base">{codriver.birthDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Email
+                    </p>
+                    <p className="text-base">{codriver.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Telefon
+                    </p>
+                    <p className="text-base">{codriver.phone}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id={`license-${codriver.id}`}
+                      checked={codriver.sportsLicense}
+                      disabled
+                    />
+                    <Label
+                      htmlFor={`license-${codriver.id}`}
+                      className="text-sm cursor-pointer"
+                    >
+                      Licencja sportowa
+                    </Label>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Klub
-                  </p>
-                  <p className="text-base">{codriver.club}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Data urodzenia
-                  </p>
-                  <p className="text-base">{codriver.birthDate}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Email
-                  </p>
-                  <p className="text-base">{codriver.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Telefon
-                  </p>
-                  <p className="text-base">{codriver.phone}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id={`license-${index}`}
-                    checked={codriver.sportsLicense}
-                    disabled
-                  />
-                  <Label
-                    htmlFor={`license-${index}`}
-                    className="text-sm cursor-pointer"
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(codriver)}
+                    disabled={submitting}
                   >
-                    Licencja sportowa
-                  </Label>
+                    Edytuj
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => openDeleteDialog(codriver)}
+                    disabled={submitting}
+                  >
+                    Usuń
+                  </Button>
                 </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(index)}
-                >
-                  Edytuj
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => openDeleteDialog(index)}
-                >
-                  Usuń
-                </Button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {!showForm && (
           <div className="flex justify-end mt-4">
@@ -221,6 +305,7 @@ export default function Codrivers() {
               type="button"
               variant="default"
               onClick={() => setShowForm(true)}
+              disabled={loading || submitting}
             >
               + Dodaj Pilota
             </Button>
@@ -238,7 +323,7 @@ export default function Codrivers() {
           className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow p-4"
         >
           <h2 className="text-lg font-semibold mb-4">
-            {editingIndex !== null ? "Edytuj Pilota" : "Dodaj Pilota"}
+            {editingId !== null ? "Edytuj Pilota" : "Dodaj Pilota"}
           </h2>
 
           <form className="grid grid-cols-1 gap-3" onSubmit={handleSubmit}>
@@ -322,14 +407,19 @@ export default function Codrivers() {
                 variant="outline"
                 onClick={() => {
                   setNewCodriver(initialCodriver);
-                  setEditingIndex(null);
+                  setEditingId(null);
                   setShowForm(false);
                 }}
+                disabled={submitting}
               >
                 Anuluj
               </Button>
-              <Button type="submit" variant="default">
-                {editingIndex !== null ? "Zapisz zmiany" : "Dodaj Pilota"}
+              <Button type="submit" variant="default" disabled={submitting}>
+                {submitting
+                  ? "Zapisywanie..."
+                  : editingId !== null
+                  ? "Zapisz zmiany"
+                  : "Dodaj Pilota"}
               </Button>
             </div>
           </form>
