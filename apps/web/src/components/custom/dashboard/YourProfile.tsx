@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useAuth from "@/hooks/use-auth";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ export default function YourProfile() {
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const { user } = useAuth();
 
   // Load profile on component mount
   useEffect(() => {
@@ -39,8 +41,14 @@ export default function YourProfile() {
       try {
         setLoading(true);
         const data = await getProfile();
+        // Jeśli profil nie ma emaila, ustaw z user
         if (data) {
-          setProfile(data);
+          setProfile(() => ({
+            ...data,
+            email: user?.email || data.email || "",
+          }));
+        } else if (user?.email) {
+          setProfile((prev) => ({ ...prev, email: user.email }));
         }
       } catch (error) {
         dispatch(
@@ -54,7 +62,7 @@ export default function YourProfile() {
       }
     }
     loadProfile();
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   const handleInput = (field: keyof Profile, value: string | boolean) => {
     setProfile((prev) => ({
@@ -178,7 +186,7 @@ export default function YourProfile() {
                 id="email"
                 type="email"
                 value={profile.email ?? ""}
-                onChange={(e) => handleInput("email", e.target.value)}
+                disabled
               />
             </div>
             <div className="flex flex-col gap-1">
