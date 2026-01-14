@@ -374,7 +374,7 @@ export default function Codrivers() {
                   }
                 />
                 <Label htmlFor="codriver-sportsLicense">
-                  Posiadam licencję sportową
+                  Posiada licencję sportową
                 </Label>
               </div>
             </div>
