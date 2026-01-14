@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -88,7 +87,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-// Parse request body
+    // Parse request body
     const profileData: ProfileInput = await req.json();
 
     // Validate required fields
@@ -117,57 +116,34 @@ Deno.serve(async (req: Request) => {
       ice_contact_phone: profileData.iceContact?.phone || null,
     };
 
-    // Use direct Postgres client to bypass PostgREST JWT validation
-    console.log("Attempting upsert with data:", dbData);
-    
-    // In Docker, use 'db' as hostname; locally you might need host.docker.internal
-    const client = new Client({
-      hostname: "db",
-      port: 5432,
-      user: "postgres",
-      password: "postgres",
-      database: "postgres",
-    });
+    // Use supabase-js client with service role key for secure upsert
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return new Response(
+        JSON.stringify({ error: "Missing Supabase env vars" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
-    await client.connect();
-    
-    const result = await client.queryObject(
-      `INSERT INTO public.user_profiles (
-        id, name, team, club, birth_date, driving_license_number,
-        sports_license, email, phone, ice_contact_name, ice_contact_phone
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      ON CONFLICT (id) DO UPDATE SET
-        name = EXCLUDED.name,
-        team = EXCLUDED.team,
-        club = EXCLUDED.club,
-        birth_date = EXCLUDED.birth_date,
-        driving_license_number = EXCLUDED.driving_license_number,
-        sports_license = EXCLUDED.sports_license,
-        email = EXCLUDED.email,
-        phone = EXCLUDED.phone,
-        ice_contact_name = EXCLUDED.ice_contact_name,
-        ice_contact_phone = EXCLUDED.ice_contact_phone,
-        updated_at = NOW()
-      RETURNING *`,
-      [
-        dbData.id,
-        dbData.name,
-        dbData.team,
-        dbData.club,
-        dbData.birth_date,
-        dbData.driving_license_number,
-        dbData.sports_license,
-        dbData.email,
-        dbData.phone,
-        dbData.ice_contact_name,
-        dbData.ice_contact_phone,
-      ]
-    );
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    await client.end();
-    
-    const profile = result.rows[0];
-    console.log("Upsert successful:", profile);
+    // Upsert profile, but only for the user matching JWT
+    const { data: profile, error } = await supabase
+      .from("user_profiles")
+      .upsert([dbData], { onConflict: "id" })
+      .select()
+      .single();
+
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Map database fields back to camelCase for response
     const responseData = {

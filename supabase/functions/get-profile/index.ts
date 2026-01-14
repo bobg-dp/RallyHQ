@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,28 +79,35 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Use direct Postgres client to bypass PostgREST JWT validation
-    const client = new Client({
-      hostname: "db",
-      port: 5432,
-      user: "postgres",
-      password: "postgres",
-      database: "postgres",
-    });
+    // Use supabase-js client with service role key for secure profile fetch
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return new Response(
+        JSON.stringify({ error: "Missing Supabase env vars" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
-    await client.connect();
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get user profile
-    const result = await client.queryObject(
-      `SELECT * FROM public.user_profiles WHERE id = $1`,
-      [userId]
-    );
+    const { data: profile, error } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
 
-    await client.end();
+    if (error && error.code !== "PGRST116") {
+      // PGRST116: No rows found
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const profile = result.rows[0];
-
-    // If no profile exists, return null
     if (!profile) {
       return new Response(JSON.stringify({ data: null }), {
         status: 200,
