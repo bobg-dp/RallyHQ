@@ -1,8 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  addCar,
+  deleteCar,
+  getCars,
+  updateCar,
+  type Car,
+} from "@/lib/api/services/car.service";
 
 import {
   AlertDialog,
@@ -51,12 +59,7 @@ enum SportCarType {
   RallySportCar = "RallySportCar",
 }
 
-type Car = {
-  make: string;
-  model: string;
-  year: string;
-  registrationNumber: string;
-  vin: string;
+type CarForm = Omit<Car, "id" | "userId" | "createdAt" | "updatedAt"> & {
   engine: {
     capacity: string;
     type: EngineType;
@@ -65,15 +68,10 @@ type Car = {
     fuel: FuelType;
   };
   drive: DriveType;
-  nextInspection: string;
-  insurance: {
-    policyNumber: string;
-    expiryDate: string;
-  };
   sportCarType: SportCarType;
 };
 
-const initialCar: Car = {
+const initialCar: CarForm = {
   make: "",
   model: "",
   year: "",
@@ -93,6 +91,12 @@ const initialCar: Car = {
     expiryDate: "",
   },
   sportCarType: SportCarType.StockCar,
+};
+
+const getCapacityWithMultiplier = (capacity: string, multiplier: number) => {
+  const parsed = Number(capacity);
+  if (!Number.isFinite(parsed) || parsed <= 0) return "";
+  return String(Math.round(parsed * multiplier));
 };
 
 // Funkcja obliczająca mnożnik pojemności na podstawie typu silnika i paliwa
@@ -148,35 +152,36 @@ const getAvailableFuelTypes = (engineType: EngineType): FuelType[] => {
 };
 
 export default function Cars() {
-  const [cars, setCars] = useState<Car[]>([
-    {
-      make: "BMW",
-      model: "E46",
-      year: "1990",
-      registrationNumber: "DWR 12345",
-      vin: "WBAGH31000DR12345",
-      engine: {
-        capacity: "2000",
-        type: EngineType.Turbo,
-        capacityMultiplier: 1.7,
-        capacityWithMultiplier: "3400",
-        fuel: FuelType.Petrol,
-      },
-      drive: DriveType.RWD,
-      nextInspection: "2024-12-31",
-      insurance: {
-        policyNumber: "INS123456789",
-        expiryDate: "2025-06-30",
-      },
-      sportCarType: SportCarType.StockCar,
-    },
-  ]);
-
-  const [newCar, setNewCar] = useState<Car>(initialCar);
+  const [cars, setCars] = useState<Car[]>([]);
+  const [newCar, setNewCar] = useState<CarForm>(initialCar);
   const [showForm, setShowForm] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteCar_, setDeleteCar_] = useState<Car | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadCars();
+  }, []);
+
+  const loadCars = async () => {
+    try {
+      setLoading(true);
+      const data = await getCars();
+      setCars(data);
+    } catch (error) {
+      console.error("Failed to load cars:", error);
+      toast({
+        title: "Błąd",
+        description: "Nie udało się załadować samochodów",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInput = (field: string, value: string | number) => {
     if (field.startsWith("engine.")) {
@@ -207,7 +212,14 @@ export default function Cars() {
           engineField === "fuel" ? (value as FuelType) : updatedEngine.fuel
         );
       }
-      
+
+      if (engineField === "capacity" || engineField === "type" || engineField === "fuel") {
+        updatedEngine.capacityWithMultiplier = getCapacityWithMultiplier(
+          updatedEngine.capacity,
+          updatedEngine.capacityMultiplier
+        );
+      }
+
       setNewCar((prev) => ({
         ...prev,
         engine: updatedEngine,
@@ -229,38 +241,104 @@ export default function Cars() {
     }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (newCar.make && newCar.model && newCar.registrationNumber) {
-      if (editingIndex !== null) {
-        // Tryb edycji - aktualizuj istniejący samochód
-        setCars((prev) =>
-          prev.map((car, index) => (index === editingIndex ? newCar : car))
-        );
-        setEditingIndex(null);
-      } else {
-        // Tryb dodawania - dodaj nowy samochód
-        setCars((prev) => [...prev, newCar]);
+      try {
+        setSubmitting(true);
+
+        if (editingId !== null) {
+          const updatedCar = await updateCar({
+            ...newCar,
+            id: editingId,
+          });
+          setCars((prev) =>
+            prev.map((car) => (car.id === editingId ? updatedCar : car))
+          );
+          toast({
+            title: "Sukces",
+            description: "Samochód został zaktualizowany",
+          });
+          setEditingId(null);
+        } else {
+          const newCarData = await addCar(newCar);
+          setCars((prev) => [newCarData, ...prev]);
+          toast({
+            title: "Sukces",
+            description: "Samochód został dodany",
+          });
+        }
+
+        setNewCar(initialCar);
+        setShowForm(false);
+      } catch (error) {
+        console.error("Failed to save car:", error);
+        toast({
+          title: "Błąd",
+          description: editingId
+            ? "Nie udało się zaktualizować samochodu"
+            : "Nie udało się dodać samochodu",
+          variant: "destructive",
+        });
+      } finally {
+        setSubmitting(false);
       }
-      setNewCar(initialCar);
-      setShowForm(false);
     }
   };
 
-  const handleRemove = (index: number) => {
-    setCars((prev) => prev.filter((_, i) => i !== index));
-    setShowDeleteDialog(false);
-    setDeleteIndex(null);
+  const handleRemove = async () => {
+    if (!deleteCar_?.id) return;
+
+    try {
+      setSubmitting(true);
+      await deleteCar(deleteCar_.id);
+      setCars((prev) => prev.filter((car) => car.id !== deleteCar_.id));
+      toast({
+        title: "Sukces",
+        description: "Samochód został usunięty",
+      });
+      setShowDeleteDialog(false);
+      setDeleteCar_(null);
+    } catch (error) {
+      console.error("Failed to delete car:", error);
+      toast({
+        title: "Błąd",
+        description: "Nie udało się usunąć samochodu",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const openDeleteDialog = (index: number) => {
-    setDeleteIndex(index);
+  const openDeleteDialog = (car: Car) => {
+    setDeleteCar_(car);
     setShowDeleteDialog(true);
   };
 
-  const handleEdit = (index: number) => {
-    setNewCar(cars[index]);
-    setEditingIndex(index);
+  const handleEdit = (car: Car) => {
+    setNewCar({
+      make: car.make ?? "",
+      model: car.model ?? "",
+      year: car.year ?? "",
+      registrationNumber: car.registrationNumber ?? "",
+      vin: car.vin ?? "",
+      engine: {
+        capacity: car.engine?.capacity ?? "",
+        type: (car.engine?.type as EngineType) ?? EngineType.NaturallyAspirated,
+        capacityMultiplier: car.engine?.capacityMultiplier ?? 1.0,
+        capacityWithMultiplier: car.engine?.capacityWithMultiplier ?? "",
+        fuel: (car.engine?.fuel as FuelType) ?? FuelType.Petrol,
+      },
+      drive: (car.drive as DriveType) ?? DriveType.FWD,
+      nextInspection: car.nextInspection ?? "",
+      insurance: {
+        policyNumber: car.insurance?.policyNumber ?? "",
+        expiryDate: car.insurance?.expiryDate ?? "",
+      },
+      sportCarType: (car.sportCarType as SportCarType) ?? SportCarType.StockCar,
+    });
+    setEditingId(car.id || null);
     setShowForm(true);
   };
 
@@ -274,11 +352,11 @@ export default function Cars() {
               Czy na pewno chcesz usunąć samochód?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteIndex !== null && (
+              {deleteCar_ && (
                 <>
                   Zamierzasz usunąć samochód:{" "}
                   <strong>
-                    {cars[deleteIndex]?.make} {cars[deleteIndex]?.model}
+                    {deleteCar_.make} {deleteCar_.model}
                   </strong>
                   . Ta operacja jest nieodwracalna.
                 </>
@@ -286,12 +364,13 @@ export default function Cars() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel disabled={submitting}>Anuluj</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteIndex !== null && handleRemove(deleteIndex)}
+              onClick={handleRemove}
+              disabled={submitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Usuń
+              {submitting ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -307,104 +386,118 @@ export default function Cars() {
       >
         <h2 className="text-lg font-semibold mb-4">Samochody</h2>
 
-        <div className="space-y-3">
-          {cars.map((car, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="border border-border rounded-lg p-3 hover:bg-accent/50 transition-colors"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Marka i model
-                  </p>
-                  <p className="text-base">
-                    {car.make} {car.model}
-                  </p>
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Ładowanie...
+          </div>
+        ) : cars.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Nie masz jeszcze żadnych samochodów. Dodaj pierwszy!
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {cars.map((car, index) => (
+              <motion.div
+                key={car.id ?? index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="border border-border rounded-lg p-3 hover:bg-accent/50 transition-colors"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Marka i model
+                    </p>
+                    <p className="text-base">
+                      {car.make} {car.model}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Rok produkcji
+                    </p>
+                    <p className="text-base">{car.year}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Numer rejestracyjny
+                    </p>
+                    <p className="text-base">{car.registrationNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      VIN
+                    </p>
+                    <p className="text-base">{car.vin}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Silnik
+                    </p>
+                    <p className="text-base">
+                      {car.engine.capacity} cm³ ({getEngineTypeLabel(car.engine.type as EngineType)})
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Paliwo
+                    </p>
+                    <p className="text-base">
+                      {getFuelTypeLabel(car.engine.fuel as FuelType)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Napęd
+                    </p>
+                    <p className="text-base">{car.drive}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Typ samochodu
+                    </p>
+                    <p className="text-base">{car.sportCarType}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Następny przegląd
+                    </p>
+                    <p className="text-base">{car.nextInspection}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Ubezpieczenie
+                    </p>
+                    <p className="text-base">
+                      {car.insurance.policyNumber} (do {car.insurance.expiryDate})
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Rok produkcji
-                  </p>
-                  <p className="text-base">{car.year}</p>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(car)}
+                    disabled={submitting}
+                  >
+                    Edytuj
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => openDeleteDialog(car)}
+                    disabled={submitting}
+                  >
+                    Usuń
+                  </Button>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Numer rejestracyjny
-                  </p>
-                  <p className="text-base">{car.registrationNumber}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    VIN
-                  </p>
-                  <p className="text-base">{car.vin}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Silnik
-                  </p>
-                  <p className="text-base">
-                    {car.engine.capacity} cm³ ({getEngineTypeLabel(car.engine.type)})
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Paliwo
-                  </p>
-                  <p className="text-base">{getFuelTypeLabel(car.engine.fuel)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Napęd
-                  </p>
-                  <p className="text-base">{car.drive}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Typ samochodu
-                  </p>
-                  <p className="text-base">{car.sportCarType}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Następny przegląd
-                  </p>
-                  <p className="text-base">{car.nextInspection}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Ubezpieczenie
-                  </p>
-                  <p className="text-base">
-                    {car.insurance.policyNumber} (do {car.insurance.expiryDate})
-                  </p>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(index)}
-                >
-                  Edytuj
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => openDeleteDialog(index)}
-                >
-                  Usuń
-                </Button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {!showForm && (
           <div className="flex justify-end mt-4">
@@ -412,6 +505,7 @@ export default function Cars() {
               type="button"
               variant="default"
               onClick={() => setShowForm(true)}
+              disabled={loading || submitting}
             >
               + Dodaj Samochód
             </Button>
@@ -429,7 +523,7 @@ export default function Cars() {
           className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow p-4"
         >
           <h2 className="text-lg font-semibold mb-4">
-            {editingIndex !== null ? "Edytuj Samochód" : "Dodaj Samochód"}
+            {editingId !== null ? "Edytuj Samochód" : "Dodaj Samochód"}
           </h2>
 
           <form className="grid grid-cols-1 gap-4" onSubmit={handleSubmit}>
@@ -646,14 +740,19 @@ export default function Cars() {
                 variant="outline"
                 onClick={() => {
                   setNewCar(initialCar);
-                  setEditingIndex(null);
+                  setEditingId(null);
                   setShowForm(false);
                 }}
+                disabled={submitting}
               >
                 Anuluj
               </Button>
-              <Button type="submit" variant="default">
-                {editingIndex !== null ? "Zapisz zmiany" : "Dodaj Samochód"}
+              <Button type="submit" variant="default" disabled={submitting}>
+                {submitting
+                  ? "Zapisywanie..."
+                  : editingId !== null
+                  ? "Zapisz zmiany"
+                  : "Dodaj Samochód"}
               </Button>
             </div>
           </form>

@@ -87,12 +87,38 @@ export async function getUserFromRequest(supabase: any, req: Request) {
     return { user: null, error: "Unauthorized - No Authorization header" };
   }
   const token = authHeader.replace("Bearer ", "");
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) {
+
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user) {
+      const errorMessage = error?.message || "Invalid or expired token";
+      const decoded = getUserIdFromAuthHeader(authHeader);
+      console.error("[Auth] getUser failed", {
+        error: errorMessage,
+        hasAuthHeader: Boolean(authHeader),
+        tokenPrefix: token.slice(0, 8),
+        userIdFromJwt: decoded.userId,
+        jwtError: decoded.error,
+      });
+      return {
+        user: null,
+        error: errorMessage,
+      };
+    }
+    return { user: data.user, error: null };
+  } catch (err) {
+    const errorMessage = String(err) || "Invalid or expired token";
+    const decoded = getUserIdFromAuthHeader(authHeader);
+    console.error("[Auth] getUser threw", {
+      error: errorMessage,
+      hasAuthHeader: Boolean(authHeader),
+      tokenPrefix: token.slice(0, 8),
+      userIdFromJwt: decoded.userId,
+      jwtError: decoded.error,
+    });
     return {
       user: null,
-      error: error?.message || "Invalid or expired token",
+      error: errorMessage,
     };
   }
-  return { user: data.user, error: null };
 }
