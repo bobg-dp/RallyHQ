@@ -126,6 +126,7 @@ export default function Signup() {
                       <div className="relative">
                         <Input
                           id="email"
+                          autoComplete="username"
                           className={cn(
                             "w-full transition-all duration-200",
                             errors.email
@@ -184,6 +185,7 @@ export default function Signup() {
                       <div className="relative">
                         <Input
                           id="password"
+                          autoComplete="new-password"
                           className={cn(
                             "w-full transition-all duration-200",
                             errors.password
@@ -244,6 +246,7 @@ export default function Signup() {
                       <div className="relative">
                         <Input
                           id="confirmPassword"
+                          autoComplete="new-password"
                           className={cn(
                             "w-full transition-all duration-200",
                             errors.confirmPassword
