@@ -4,9 +4,9 @@ Monorepo setup using Turborepo. Apps and packages:
 
 - apps/web — frontend (Vite + React + TypeScript)
 - apps/api — backend proxy API (Node.js + Express)
-- apps/functions — Supabase Edge Functions (Deno + TypeScript)
 - packages/ui — shared UI package
 - supabase/ — Supabase project configuration (DB migrations, config.toml)
+- supabase/functions — Supabase Edge Functions (Deno + TypeScript)
 
 Quick start
 
