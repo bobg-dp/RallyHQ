@@ -10,6 +10,12 @@ import { motion } from "framer-motion";
 import Logo from "@/components/custom/Logo";
 import strings from "../strings.json";
 
+import { useAppDispatch } from "@/lib/store";
+import { useNavigate } from "react-router-dom";
+import { register } from "@/lib/store/thunks/auth.thunks";
+import { addToast } from "@/lib/store/slices/uiSlice";
+import { useState } from "react";
+
 const schema = z
   .object({
     email: z.string().email().nonempty("Email is required"),
@@ -23,14 +29,10 @@ const schema = z
 
 type Inputs = z.infer<typeof schema>;
 
-import { useAppDispatch } from "@/lib/store";
-import { useNavigate } from "react-router-dom";
-import { register } from "@/lib/store/thunks/auth.thunks";
-import { addToast } from "@/lib/store/slices/uiSlice";
-
 export default function Signup() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const {
     register: formRegister,
@@ -41,6 +43,7 @@ export default function Signup() {
   });
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    if (!termsAccepted) return; // safety, button is also disabled
     try {
       const response = await dispatch(
         register({ email: data.email, password: data.password, name: "" })
@@ -303,6 +306,8 @@ export default function Signup() {
                       id="terms"
                       name="terms"
                       type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
                       className="h-4 w-4 text-primary focus:ring-primary border-input rounded"
                     />
                     <label
@@ -326,7 +331,10 @@ export default function Signup() {
                     </label>
                   </div>
 
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Button
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    disabled={!termsAccepted}
+                  >
                     {strings.common.createAccount}
                   </Button>
 
