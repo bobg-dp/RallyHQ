@@ -37,26 +37,35 @@
 
 ## Szkielet przykładowej funkcji
 
-```typescript
-import { createClient } from "https://esm.sh/@supabase/supabase-js@x.x.x";
+## Wspólny plik util.ts
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+Powtarzające się fragmenty (nagłówki CORS, obsługa preflight, autoryzacja, inicjalizacja Supabase) wydziel do pliku `util.ts`.
+Importuj funkcje z util.ts w każdej nowej funkcji.
+
+### Przykład użycia:
+
+```typescript
+import { corsHeaders, handleOptions, getSupabaseClient, getUserIdFromAuthHeader } from "../util.ts";
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200, headers: corsHeaders });
-  }
+   const optionsRes = handleOptions(req);
+   if (optionsRes) return optionsRes;
 
-  // ...autoryzacja, walidacja, logika...
+   // Autoryzacja
+   const authHeader = req.headers.get("Authorization");
+   const { userId, error: authError } = getUserIdFromAuthHeader(authHeader);
+   if (authError) {
+      return new Response(JSON.stringify({ error: authError }), {
+         status: 401,
+         headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+   }
 
-  return new Response(JSON.stringify({ data }), {
-    status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+   // Inicjalizacja Supabase
+   const { client: supabase, error: supaError } = getSupabaseClient();
+   if (supaError) return supaError;
+
+   // ...logika funkcji...
 });
 ```
 
@@ -69,4 +78,4 @@ Deno.serve(async (req: Request) => {
 
 ---
 
-Przed dodaniem nowej funkcji, skopiuj szkielet i stosuj powyższe zasady.
+Przed dodaniem nowej funkcji, skopiuj szkielet i stosuj powyższe zasady. Wspólne fragmenty importuj z util.ts.

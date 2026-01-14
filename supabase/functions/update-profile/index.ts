@@ -1,11 +1,6 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { corsHeaders, handleOptions, getSupabaseClient, getUserFromRequest } from "../util.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+// ...existing code...
 
 interface ProfileInput {
   name: string;
@@ -23,13 +18,8 @@ interface ProfileInput {
 }
 
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
+  const optionsRes = handleOptions(req);
+  if (optionsRes) return optionsRes;
 
   try {
     // Only allow POST requests
@@ -40,51 +30,17 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Get authorization header
-    const authHeader = req.headers.get("Authorization");
+    // Supabase client
+    const { client: supabase, error: supaError } = getSupabaseClient();
+    if (supaError) return supaError;
 
-    console.log("Auth header:", authHeader ? "Present" : "Missing");
-
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - No Authorization header" }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Extract and decode JWT token
-    const token = authHeader.replace("Bearer ", "");
-    let userId: string;
-
-    try {
-      // Decode JWT payload (base64)
-      const parts = token.split(".");
-      if (parts.length !== 3) {
-        throw new Error("Invalid token format");
-      }
-      const payload = JSON.parse(atob(parts[1]));
-      console.log("Token payload keys:", Object.keys(payload));
-
-      userId = payload.sub || payload.user_id || payload.id;
-
-      if (!userId) {
-        console.error("No user ID found in token. Payload:", payload);
-        throw new Error("No user ID in token");
-      }
-
-      console.log("User ID:", userId);
-    } catch (e) {
-      console.error("Token decode error:", e);
-      return new Response(
-        JSON.stringify({ error: "Invalid token: " + String(e) }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    // Pobierz usera z access_token
+    const { user, error: userError } = await getUserFromRequest(supabase, req);
+    if (userError) {
+      return new Response(JSON.stringify({ error: userError }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Parse request body
@@ -103,7 +59,7 @@ Deno.serve(async (req: Request) => {
 
     // Map camelCase to snake_case for database
     const dbData = {
-      id: userId,
+      id: user.id,
       name: profileData.name,
       team: profileData.team || null,
       club: profileData.club || null,
@@ -115,21 +71,6 @@ Deno.serve(async (req: Request) => {
       ice_contact_name: profileData.iceContact?.name || null,
       ice_contact_phone: profileData.iceContact?.phone || null,
     };
-
-    // Use supabase-js client with service role key for secure upsert
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      return new Response(
-        JSON.stringify({ error: "Missing Supabase env vars" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Upsert profile, but only for the user matching JWT
     const { data: profile, error } = await supabase
