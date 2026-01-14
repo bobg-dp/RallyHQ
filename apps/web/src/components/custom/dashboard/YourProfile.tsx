@@ -121,7 +121,7 @@ export default function YourProfile() {
               <Label htmlFor="name">Imię i nazwisko</Label>
               <Input
                 id="name"
-                value={profile.name}
+                value={profile.name ?? ""}
                 onChange={(e) => handleInput("name", e.target.value)}
               />
             </div>
@@ -129,7 +129,7 @@ export default function YourProfile() {
               <Label htmlFor="team">Zespół</Label>
               <Input
                 id="team"
-                value={profile.team}
+                value={profile.team ?? ""}
                 onChange={(e) => handleInput("team", e.target.value)}
               />
             </div>
@@ -137,7 +137,7 @@ export default function YourProfile() {
               <Label htmlFor="club">Klub</Label>
               <Input
                 id="club"
-                value={profile.club}
+                value={profile.club ?? ""}
                 onChange={(e) => handleInput("club", e.target.value)}
               />
             </div>
@@ -145,7 +145,7 @@ export default function YourProfile() {
               <Label htmlFor="birthDate">Data urodzenia</Label>
               <Input
                 id="birthDate"
-                value={profile.birthDate}
+                value={profile.birthDate ?? ""}
                 onChange={(e) => handleInput("birthDate", e.target.value)}
               />
             </div>
@@ -153,7 +153,7 @@ export default function YourProfile() {
               <Label htmlFor="drivingLicenseNumber">Numer prawa jazdy</Label>
               <Input
                 id="drivingLicenseNumber"
-                value={profile.drivingLicenseNumber}
+                value={profile.drivingLicenseNumber ?? ""}
                 onChange={(e) =>
                   handleInput("drivingLicenseNumber", e.target.value)
                 }
@@ -162,7 +162,7 @@ export default function YourProfile() {
             <div className="flex items-center gap-2 pt-6">
               <Checkbox
                 id="sportsLicense"
-                checked={profile.sportsLicense}
+                checked={!!profile.sportsLicense}
                 onCheckedChange={(checked) =>
                   handleInput("sportsLicense", Boolean(checked))
                 }
@@ -177,7 +177,7 @@ export default function YourProfile() {
               <Input
                 id="email"
                 type="email"
-                value={profile.email}
+                value={profile.email ?? ""}
                 onChange={(e) => handleInput("email", e.target.value)}
               />
             </div>
@@ -185,7 +185,7 @@ export default function YourProfile() {
               <Label htmlFor="phone">Telefon</Label>
               <Input
                 id="phone"
-                value={profile.phone}
+                value={profile.phone ?? ""}
                 onChange={(e) => handleInput("phone", e.target.value)}
               />
             </div>
@@ -196,7 +196,7 @@ export default function YourProfile() {
               <Label htmlFor="iceName">ICE - osoba do kontaktu</Label>
               <Input
                 id="iceName"
-                value={profile.iceContact.name}
+                value={profile.iceContact?.name ?? ""}
                 onChange={(e) => handleIceInput("name", e.target.value)}
               />
             </div>
@@ -204,7 +204,7 @@ export default function YourProfile() {
               <Label htmlFor="icePhone">ICE - telefon</Label>
               <Input
                 id="icePhone"
-                value={profile.iceContact.phone}
+                value={profile.iceContact?.phone ?? ""}
                 onChange={(e) => handleIceInput("phone", e.target.value)}
               />
             </div>
