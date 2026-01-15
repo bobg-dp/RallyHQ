@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { login } from "@/lib/store/thunks/auth.thunks";
 import { addToast } from "@/lib/store/slices/uiSlice";
 import Logo from "@/components/custom/Logo";
+import { useState } from "react";
 
 const schema = z.object({
   email: z.string().email(),
@@ -25,6 +26,7 @@ export default function Login() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.auth);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -183,19 +185,59 @@ export default function Login() {
                           id="password"
                           autoComplete="current-password"
                           className={cn(
-                            "w-full transition-all duration-200",
+                            "w-full transition-all duration-200 pr-12",
                             errors.password
-                              ? "border-destructive focus-visible:ring-destructive pr-10"
+                              ? "border-destructive focus-visible:ring-destructive"
                               : "focus-visible:ring-primary"
                           )}
                           placeholder={
                             strings.components.loginForm.passwordHint
                           }
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           {...register("password")}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                          aria-label={
+                            showPassword
+                              ? strings.pages.login.form.hidePassword ?? "Ukryj hasło"
+                              : strings.pages.login.form.showPassword ?? "Pokaż hasło"
+                          }
+                        >
+                          {showPassword ? (
+                            <svg
+                              className="h-5 w-5"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M17.94 17.94A10.06 10.06 0 0 1 12 20c-5 0-9.27-3.11-11-8 1-2.59 2.84-4.78 5.06-6.06" />
+                              <path d="M1 1l22 22" />
+                              <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                              <path d="M21.2 12.8A10.08 10.08 0 0 0 12 4c-1.7 0-3.34.4-4.8 1.1" />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="h-5 w-5"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          )}
+                        </button>
                         {errors.password && (
-                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <div className="absolute inset-y-0 right-10 flex items-center pr-3 pointer-events-none">
                             <svg
                               className="h-5 w-5 text-destructive"
                               viewBox="0 0 20 20"
