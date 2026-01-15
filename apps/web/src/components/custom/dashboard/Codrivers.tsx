@@ -21,7 +21,8 @@ import {
   deleteCodriver,
   type Codriver,
 } from "@/lib/api/services/codriver.service";
-import { useToast } from "@/components/ui/use-toast";
+import { useAppDispatch } from "@/lib/store";
+import { addToast } from "@/lib/store/slices/uiSlice";
 
 const initialCodriver: Omit<
   Codriver,
@@ -45,7 +46,7 @@ export default function Codrivers() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const { toast } = useToast();
+  const dispatch = useAppDispatch();
 
   // Pobierz codriverów przy montowaniu komponentu
   useEffect(() => {
@@ -59,11 +60,12 @@ export default function Codrivers() {
       setCodrivers(data);
     } catch (error) {
       console.error("Failed to load codrivers:", error);
-      toast({
-        title: "Błąd",
-        description: "Nie udało się załadować pilotów",
-        variant: "destructive",
-      });
+      dispatch(
+        addToast({
+          type: "error",
+          message: "Nie udało się załadować pilotów",
+        })
+      );
     } finally {
       setLoading(false);
     }
@@ -93,32 +95,37 @@ export default function Codrivers() {
               codriver.id === editingId ? updatedCodriver : codriver
             )
           );
-          toast({
-            title: "Sukces",
-            description: "Pilot został zaktualizowany",
-          });
+          dispatch(
+            addToast({
+              type: "success",
+              message: "Pilot został zaktualizowany",
+            })
+          );
           setEditingId(null);
         } else {
           // Tryb dodawania - dodaj nowego codrivera
           const newCodriverData = await addCodriver(newCodriver);
           setCodrivers((prev) => [newCodriverData, ...prev]);
-          toast({
-            title: "Sukces",
-            description: "Pilot został dodany",
-          });
+          dispatch(
+            addToast({
+              type: "success",
+              message: "Pilot został dodany",
+            })
+          );
         }
 
         setNewCodriver(initialCodriver);
         setShowForm(false);
       } catch (error) {
         console.error("Failed to save codriver:", error);
-        toast({
-          title: "Błąd",
-          description: editingId
-            ? "Nie udało się zaktualizować pilota"
-            : "Nie udało się dodać pilota",
-          variant: "destructive",
-        });
+        dispatch(
+          addToast({
+            type: "error",
+            message: editingId
+              ? "Nie udało się zaktualizować pilota"
+              : "Nie udało się dodać pilota",
+          })
+        );
       } finally {
         setSubmitting(false);
       }
@@ -131,19 +138,22 @@ export default function Codrivers() {
         setSubmitting(true);
         await deleteCodriver(deleteCodriver_.id);
         setCodrivers((prev) => prev.filter((c) => c.id !== deleteCodriver_.id));
-        toast({
-          title: "Sukces",
-          description: "Pilot został usunięty",
-        });
+        dispatch(
+          addToast({
+            type: "success",
+            message: "Pilot został usunięty",
+          })
+        );
         setShowDeleteDialog(false);
         setDeleteCodriver_(null);
       } catch (error) {
         console.error("Failed to delete codriver:", error);
-        toast({
-          title: "Błąd",
-          description: "Nie udało się usunąć pilota",
-          variant: "destructive",
-        });
+        dispatch(
+          addToast({
+            type: "error",
+            message: "Nie udało się usunąć pilota",
+          })
+        );
       } finally {
         setSubmitting(false);
       }

@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useAppDispatch } from "@/lib/store";
+import { addToast } from "@/lib/store/slices/uiSlice";
 import {
   addCar,
   deleteCar,
@@ -160,7 +161,7 @@ export default function Cars() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const { toast } = useToast();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     loadCars();
@@ -173,11 +174,12 @@ export default function Cars() {
       setCars(data);
     } catch (error) {
       console.error("Failed to load cars:", error);
-      toast({
-        title: "Błąd",
-        description: "Nie udało się załadować samochodów",
-        variant: "destructive",
-      });
+      dispatch(
+        addToast({
+          type: "error",
+          message: "Nie udało się załadować samochodów",
+        })
+      );
     } finally {
       setLoading(false);
     }
@@ -255,31 +257,36 @@ export default function Cars() {
           setCars((prev) =>
             prev.map((car) => (car.id === editingId ? updatedCar : car))
           );
-          toast({
-            title: "Sukces",
-            description: "Samochód został zaktualizowany",
-          });
+          dispatch(
+            addToast({
+              type: "success",
+              message: "Samochód został zaktualizowany",
+            })
+          );
           setEditingId(null);
         } else {
           const newCarData = await addCar(newCar);
           setCars((prev) => [newCarData, ...prev]);
-          toast({
-            title: "Sukces",
-            description: "Samochód został dodany",
-          });
+          dispatch(
+            addToast({
+              type: "success",
+              message: "Samochód został dodany",
+            })
+          );
         }
 
         setNewCar(initialCar);
         setShowForm(false);
       } catch (error) {
         console.error("Failed to save car:", error);
-        toast({
-          title: "Błąd",
-          description: editingId
-            ? "Nie udało się zaktualizować samochodu"
-            : "Nie udało się dodać samochodu",
-          variant: "destructive",
-        });
+        dispatch(
+          addToast({
+            type: "error",
+            message: editingId
+              ? "Nie udało się zaktualizować samochodu"
+              : "Nie udało się dodać samochodu",
+          })
+        );
       } finally {
         setSubmitting(false);
       }
@@ -293,19 +300,22 @@ export default function Cars() {
       setSubmitting(true);
       await deleteCar(deleteCar_.id);
       setCars((prev) => prev.filter((car) => car.id !== deleteCar_.id));
-      toast({
-        title: "Sukces",
-        description: "Samochód został usunięty",
-      });
+      dispatch(
+        addToast({
+          type: "success",
+          message: "Samochód został usunięty",
+        })
+      );
       setShowDeleteDialog(false);
       setDeleteCar_(null);
     } catch (error) {
       console.error("Failed to delete car:", error);
-      toast({
-        title: "Błąd",
-        description: "Nie udało się usunąć samochodu",
-        variant: "destructive",
-      });
+      dispatch(
+        addToast({
+          type: "error",
+          message: "Nie udało się usunąć samochodu",
+        })
+      );
     } finally {
       setSubmitting(false);
     }
