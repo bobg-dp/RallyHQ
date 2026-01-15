@@ -153,6 +153,7 @@ export default function YourProfile() {
               <Label htmlFor="birthDate">Data urodzenia</Label>
               <Input
                 id="birthDate"
+                type="date"
                 value={profile.birthDate ?? ""}
                 onChange={(e) => handleInput("birthDate", e.target.value)}
               />

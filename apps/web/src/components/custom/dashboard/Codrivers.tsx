@@ -359,6 +359,7 @@ export default function Codrivers() {
                 <Label htmlFor="codriver-birthDate">Data urodzenia</Label>
                 <Input
                   id="codriver-birthDate"
+                  type="date"
                   value={newCodriver.birthDate ?? ""}
                   onChange={(e) => handleInput("birthDate", e.target.value)}
                 />
