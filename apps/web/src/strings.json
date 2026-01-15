@@ -57,7 +57,9 @@
       "errorWrongEmail": "Proszę podać poprawny adres email",
       "password": "Hasło",
       "passwordHint": "Wpisz swoje hasło",
-      "errorPasswordSize": "Hasło musi mieć od 6 do 20 znaków"
+      "errorPasswordSize": "Hasło musi mieć od 6 do 20 znaków",
+      "hidePassword": "Ukryj hasło",
+      "showPassword": "Pokaż hasło"
     }
   }
 }
