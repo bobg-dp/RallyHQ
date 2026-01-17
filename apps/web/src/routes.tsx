@@ -15,6 +15,7 @@ import Docs from "./pages/docs";
 import ErrorPage from "./pages/error";
 import Home from "./pages/home";
 import AuthCallback from "./pages/auth-callback";
+import CreateRally from "./pages/create-rally";
 
 export const router = createBrowserRouter([
   {
@@ -77,6 +78,10 @@ export const router = createBrowserRouter([
           {
             path: "/dashboard",
             element: <Dashboard />,
+          },
+          {
+            path: "/create-rally",
+            element: <CreateRally />,
           },
         ],
       },

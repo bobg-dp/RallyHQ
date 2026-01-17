@@ -6,16 +6,25 @@ import SideNav from "./side-nav";
 import { motion } from "framer-motion";
 import Logo from "../custom/Logo";
 import useAuth from "@/hooks/use-auth";
+import { hasCreateRallyPermission } from "@/lib/api/services/permissions.service";
 import { navLinks } from "./nav-links";
-
 
 export default function Navbar() {
   const [scrollY, setScrollY] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [canCreateRally, setCanCreateRally] = useState(false);
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
   };
+
+  useEffect(() => {
+    // Check if current user has permission to create rallies
+    void (async () => {
+      const allowed = await hasCreateRallyPermission();
+      setCanCreateRally(allowed);
+    })();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -92,6 +101,19 @@ export default function Navbar() {
                         Dashboard
                       </Link>
                     </motion.div>
+                    {canCreateRally && (
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Link
+                          to="/create-rally"
+                          className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
+                        >
+                          Utwórz rajd
+                        </Link>
+                      </motion.div>
+                    )}
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}

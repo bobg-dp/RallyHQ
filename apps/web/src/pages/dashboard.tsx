@@ -1,5 +1,6 @@
 import Seo from "../components/Seo";
 import YourProfile from "@/components/custom/dashboard/YourProfile";
+import UserPermissions from "@/components/custom/dashboard/UserPermissions";
 import Codrivers from "@/components/custom/dashboard/Codrivers";
 import Cars from "@/components/custom/dashboard/Cars";
 
@@ -16,6 +17,7 @@ export default function Dashboard() {
             <div className="max-w-7xl mx-auto">
               <div className="grid md:grid-cols-2 gap-8">
                 <YourProfile />
+                <UserPermissions />
                 <Codrivers />
                 <Cars />
               </div>
