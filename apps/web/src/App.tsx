@@ -9,40 +9,42 @@ import {
   setInitialized,
   clearCredentials,
 } from "@/lib/store/slices/authSlice";
+import { refreshToken as refreshTokenThunk } from "@/lib/store/thunks/auth.thunks";
 
 export default function App() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    // On app load, try to restore session
+    // On app load, try to restore session using our own stored refresh token
     (async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        console.warn("Error getting Supabase session", error);
-        dispatch(setInitialized());
-        return;
+      const storedRefreshToken = localStorage.getItem("rallyhq_refresh_token");
+
+      // If we don't have our own refresh token, make sure
+      // there are no stale Supabase auth entries left in localStorage
+      if (!storedRefreshToken) {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("sb-")) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
       }
 
-      const session = (data as any)?.session;
-
-      if (session) {
-        const emailConfirmed = session.user?.email_confirmed_at !== null;
-        dispatch(
-          setCredentials({
-            user: {
-              id: session.user?.id ?? "",
-              email: session.user?.email ?? "",
-              name: session.user?.user_metadata?.name ?? "",
-              role: "user",
-              emailConfirmed,
-            },
-            token: session.access_token ?? "",
-            refreshToken: session.refresh_token ?? "",
-          })
-        );
-      } else {
-        dispatch(setInitialized());
+      if (storedRefreshToken) {
+        try {
+          await dispatch(
+            refreshTokenThunk(storedRefreshToken)
+          ).unwrap();
+        } catch (error) {
+          console.warn("Error restoring session from stored refresh token", error);
+          localStorage.removeItem("rallyhq_refresh_token");
+        }
       }
+
+      // Mark app as initialized after attempting restore
+      dispatch(setInitialized());
     })();
 
     // Subscribe to auth changes and keep Redux in sync

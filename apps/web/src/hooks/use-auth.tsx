@@ -12,6 +12,16 @@ export default function useAuth() {
   const logout = useCallback(async () => {
     try {
       await dispatch(logoutThunk()).unwrap();
+      // Clear our own refresh token and any Supabase auth entries
+      localStorage.removeItem("rallyhq_refresh_token");
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("sb-")) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
       dispatch(
         addToast({
           type: "success",

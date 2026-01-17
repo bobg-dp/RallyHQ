@@ -13,7 +13,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { login } from "@/lib/store/thunks/auth.thunks";
 import { addToast } from "@/lib/store/slices/uiSlice";
 import Logo from "@/components/custom/Logo";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PasswordToggle from "@/components/custom-ui/password-toggle";
 
 const schema = z.object({
@@ -28,6 +28,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const {
     register,
@@ -37,9 +38,35 @@ export default function Login() {
     resolver: zodResolver(schema),
   });
 
+  useEffect(() => {
+    const savedRefreshToken = localStorage.getItem("rallyhq_refresh_token");
+    if (savedRefreshToken) {
+      setRememberMe(true);
+      // Optionally you could pre-fill email here by decoding the token
+      // or by making a lightweight profile call, but it's not required
+      // for restoring the Supabase session itself.
+    }
+  }, []);
+
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
-      await dispatch(login(data)).unwrap();
+      const auth = await dispatch(login(data)).unwrap();
+
+      if (rememberMe && auth.refreshToken) {
+        localStorage.setItem("rallyhq_refresh_token", auth.refreshToken);
+      } else {
+        // User does not want to be remembered: remove our token
+        // and any Supabase auth entries from localStorage
+        localStorage.removeItem("rallyhq_refresh_token");
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("sb-")) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+      }
 
       dispatch(
         addToast({
@@ -246,6 +273,8 @@ export default function Login() {
                         id="remember-me"
                         name="remember-me"
                         type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
                         className="h-4 w-4 text-primary focus:ring-primary border-input rounded"
                       />
                       <label

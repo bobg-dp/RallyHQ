@@ -8,4 +8,10 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn("VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is not set");
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// We disable Supabase's built-in session persistence so that
+// "remember me" can control whether a refresh token is stored.
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: false,
+  },
+});
