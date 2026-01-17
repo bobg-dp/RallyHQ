@@ -1,8 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { HiOutlineXMark } from "react-icons/hi2";
 import { Link } from 'react-router-dom';
-import { ModeToggle } from '../mode-toggle';
-import Text from '../custom-ui/text';
+import { ModeToggle } from "../mode-toggle";
 import useAuth from "@/hooks/use-auth";
 import { navLinks } from "./nav-links";
 import Logo from "../custom/Logo";
