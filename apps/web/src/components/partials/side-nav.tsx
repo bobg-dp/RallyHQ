@@ -4,70 +4,12 @@ import { Link } from 'react-router-dom';
 import { ModeToggle } from '../mode-toggle';
 import Text from '../custom-ui/text';
 import useAuth from "@/hooks/use-auth";
-import {
-  Sparkles,
-  CreditCard,
-  BookOpen,
-  Newspaper,
-  LogIn,
-  UserPlus,
-  BarChart3,
-  Settings,
-  HelpCircle,
-  LogOut,
-} from "lucide-react";
-
-const menuItems = [
-  {
-    title: "Main",
-    items: [
-      {
-        to: "/features",
-        label: "Features",
-        icon: <Sparkles className="w-4 h-4" />,
-      },
-      {
-        to: "/pricing",
-        label: "Pricing",
-        icon: <CreditCard className="w-4 h-4" />,
-      },
-      {
-        to: "/docs",
-        label: "Documentation",
-        icon: <BookOpen className="w-4 h-4" />,
-      },
-      { to: "/blog", label: "Blog", icon: <Newspaper className="w-4 h-4" /> },
-    ],
-  },
-  // Account section is rendered dynamically based on auth state
-  // (left empty here, rendered in component)
-  {
-    title: "Account",
-    items: [],
-  },
-  {
-    title: "Resources",
-    items: [
-      {
-        to: "/analytics",
-        label: "Analytics",
-        icon: <BarChart3 className="w-4 h-4" />,
-      },
-      {
-        to: "/settings",
-        label: "Settings",
-        icon: <Settings className="w-4 h-4" />,
-      },
-      {
-        to: "/help",
-        label: "Help Center",
-        icon: <HelpCircle className="w-4 h-4" />,
-      },
-    ],
-  },
-];
+import { navLinks } from "./nav-links";
+import Logo from "../custom/Logo";
 
 export default function SideNav({ isOpen, handleClose }: { isOpen: boolean, handleClose: () => void }) {
+    const { isAuthenticated, logout } = useAuth();
+
     return (
       <AnimatePresence mode="wait">
         {isOpen && (
@@ -97,10 +39,7 @@ export default function SideNav({ isOpen, handleClose }: { isOpen: boolean, hand
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <Text
-                    className="text-xl font-bold text-primary"
-                    label="SaaSify"
-                  />
+                  <Logo />
                 </motion.div>
                 <div className="flex items-center gap-2">
                   <motion.div
@@ -119,127 +58,109 @@ export default function SideNav({ isOpen, handleClose }: { isOpen: boolean, hand
                   </motion.button>
                 </div>
               </div>
-
               <div className="p-4 space-y-6">
-                {menuItems.map((section, index) => (
-                  <motion.div
-                    key={section.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="space-y-2"
-                  >
-                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 px-2">
-                      {section.title}
-                    </h3>
+                {/* Main section - same links as navbar */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="space-y-2"
+                >
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 px-2">
+                    Main
+                  </h3>
 
-                    {/* Account section is rendered based on auth state */}
-                    {section.title === "Account"
-                      ? (() => {
-                          const { isAuthenticated, logout } = useAuth();
+                  {navLinks.map((item, index) => (
+                    <motion.div
+                      key={item.label}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * (index + 1) }}
+                    >
+                      <Link
+                        to={item.to}
+                        className="flex items-center gap-3 px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1"
+                        onClick={handleClose}
+                      >
+                        {item.label}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </motion.div>
 
-                          if (isAuthenticated) {
-                            return (
-                              <>
-                                <motion.div
-                                  initial={{ opacity: 0, x: -20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: 0.1 * (index + 1) }}
-                                >
-                                  <Link
-                                    to="/dashboard"
-                                    className="flex items-center gap-3 px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1"
-                                    onClick={handleClose}
-                                  >
-                                    <span className="text-gray-400 dark:text-gray-500 group-hover:text-primary">
-                                      <BarChart3 className="w-4 h-4" />
-                                    </span>
-                                    Dashboard
-                                  </Link>
-                                </motion.div>
-                                <motion.div
-                                  initial={{ opacity: 0, x: -20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: 0.1 * (index + 2) }}
-                                >
-                                  <button
-                                    onClick={() => {
-                                      logout();
-                                      handleClose();
-                                    }}
-                                    className="flex items-center gap-3 px-2 py-1.5 text-sm text-destructive dark:text-destructive hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1"
-                                  >
-                                    <span className="text-gray-400 dark:text-gray-500 group-hover:text-primary">
-                                      <LogOut className="w-4 h-4" />
-                                    </span>
-                                    Wyloguj
-                                  </button>
-                                </motion.div>
-                              </>
-                            );
-                          }
+                {/* Account section - mirrors navbar auth buttons */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-2"
+                >
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 px-2">
+                    Account
+                  </h3>
 
-                          // not authenticated
-                          return (
-                            <>
-                              <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.1 * (index + 1) }}
-                              >
-                                <Link
-                                  to="/login"
-                                  className="flex items-center gap-3 px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1"
-                                  onClick={handleClose}
-                                >
-                                  <span className="text-gray-400 dark:text-gray-500 group-hover:text-primary">
-                                    <LogIn className="w-4 h-4" />
-                                  </span>
-                                  Sign in
-                                </Link>
-                              </motion.div>
-                              <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.1 * (index + 2) }}
-                              >
-                                <Link
-                                  to="/rejestracja"
-                                  className="flex items-center gap-3 px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1"
-                                  onClick={handleClose}
-                                >
-                                  <span className="text-gray-400 dark:text-gray-500 group-hover:text-primary">
-                                    <UserPlus className="w-4 h-4" />
-                                  </span>
-                                  Utwórz konto
-                                </Link>
-                              </motion.div>
-                            </>
-                          );
-                        })()
-                      : section.items.map((item, itemIndex) => (
-                          <motion.div
-                            key={item.to}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{
-                              delay: 0.1 * (index + itemIndex + 1),
-                            }}
-                          >
-                            <Link
-                              to={item.to}
-                              className="flex items-center gap-3 px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1"
-                              onClick={handleClose}
-                            >
-                              <span className="text-gray-400 dark:text-gray-500 group-hover:text-primary">
-                                {item.icon}
-                              </span>
-                              {item.label}
-                            </Link>
-                          </motion.div>
-                        ))}
-                  </motion.div>
-                ))}
+                  {isAuthenticated ? (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <Link
+                          to="/dashboard"
+                          className="flex items-center gap-3 px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1"
+                          onClick={handleClose}
+                        >
+                          Dashboard
+                        </Link>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        <button
+                          onClick={() => {
+                            logout();
+                            handleClose();
+                          }}
+                          className="w-full flex items-center gap-3 px-2 py-1.5 text-sm text-destructive dark:text-destructive hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1 text-left"
+                        >
+                          Wyloguj
+                        </button>
+                      </motion.div>
+                    </>
+                  ) : (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <Link
+                          to="/login"
+                          className="flex items-center gap-3 px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1"
+                          onClick={handleClose}
+                        >
+                          Logowanie
+                        </Link>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        <Link
+                          to="/rejestracja"
+                          className="flex items-center gap-3 px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200 hover:translate-x-1"
+                          onClick={handleClose}
+                        >
+                          Rejestracja
+                        </Link>
+                      </motion.div>
+                    </>
+                  )}
+                </motion.div>
               </div>
             </motion.nav>
           </>

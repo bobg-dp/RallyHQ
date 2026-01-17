@@ -6,6 +6,7 @@ import SideNav from "./side-nav";
 import { motion } from "framer-motion";
 import Logo from "../custom/Logo";
 import useAuth from "@/hooks/use-auth";
+import { navLinks } from "./nav-links";
 
 
 export default function Navbar() {
@@ -33,11 +34,6 @@ export default function Navbar() {
       setIsOpen(false);
     }
   };
-
-  const navLinks = [
-    { to: "/", label: "Wyniki online" },
-    { to: "/", label: "Oferta" },
-  ];
 
   return (
     <>
