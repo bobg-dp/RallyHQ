@@ -5,7 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-access-token, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
@@ -21,7 +21,7 @@ export function getSupabaseClient(accessToken?: string) {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  
+
   if (!SUPABASE_URL) {
     return {
       error: new Response(
@@ -38,7 +38,7 @@ export function getSupabaseClient(accessToken?: string) {
   // If accessToken is provided, use anon key + set auth header
   // Otherwise use service role key
   const key = accessToken ? SUPABASE_ANON_KEY : SUPABASE_SERVICE_ROLE_KEY;
-  
+
   if (!key) {
     return {
       error: new Response(
@@ -66,7 +66,7 @@ export function getSupabaseClient(accessToken?: string) {
 
 export function getUserIdFromAuthHeader(authHeader: string | null) {
   if (!authHeader)
-    return { error: "Unauthorized - No Authorization header", userId: null };
+    return { error: "Unauthorized - No auth token header", userId: null };
   try {
     const token = authHeader.replace("Bearer ", "");
     const parts = token.split(".");
@@ -82,9 +82,11 @@ export function getUserIdFromAuthHeader(authHeader: string | null) {
 
 // Nowa funkcja: pobierz usera z access_token przez supabase.auth.getUser()
 export async function getUserFromRequest(supabase: any, req: Request) {
-  const authHeader = req.headers.get("Authorization");
+  // Czytamy token z niestandardowego nagłówka, aby ominąć weryfikację JWT na gateway'u
+  const authHeader =
+    req.headers.get("x-access-token") ?? req.headers.get("authorization");
   if (!authHeader) {
-    return { user: null, error: "Unauthorized - No Authorization header" };
+    return { user: null, error: "Unauthorized - No auth token header" };
   }
   const token = authHeader.replace("Bearer ", "");
 

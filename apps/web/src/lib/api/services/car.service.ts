@@ -64,7 +64,9 @@ export async function getCars(): Promise<Car[]> {
     const response = await fetch(`${functionsUrl}/get-cars`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
     });
@@ -92,7 +94,9 @@ export async function addCar(
     const response = await fetch(`${functionsUrl}/add-car`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(car),
@@ -123,7 +127,9 @@ export async function updateCar(car: Car): Promise<Car> {
     const response = await fetch(`${functionsUrl}/update-car`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(car),
@@ -150,7 +156,9 @@ export async function deleteCar(id: string): Promise<void> {
     const response = await fetch(`${functionsUrl}/delete-car`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ id }),

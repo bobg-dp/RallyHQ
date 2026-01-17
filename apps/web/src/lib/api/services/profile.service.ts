@@ -83,7 +83,11 @@ export async function getProfile(): Promise<Profile | null> {
     const response = await fetch(`${functionsUrl}/get-profile`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        // Gateway Supabase wymaga Authorization, więc podajemy tam anon key,
+        // a właściwy token użytkownika trzymamy w x-access-token do weryfikacji wewnątrz funkcji
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
     });
@@ -118,7 +122,9 @@ export async function updateProfile(profile: Profile): Promise<Profile> {
     const response = await fetch(`${functionsUrl}/update-profile`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(profile),

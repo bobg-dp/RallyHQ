@@ -2,8 +2,11 @@ node_modules
 dist
 dist-ssr
 *.local
+*.prod
+*.test
 .turbo
 .cache
 .pnpm-debug.log
 .pnpmfile.cjs
 .pnpm-store
+supabase/.temp

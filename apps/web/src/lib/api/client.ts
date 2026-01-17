@@ -30,28 +30,23 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
-        const originalRequest = error.config;
+      const originalRequest = error.config;
 
-        // Handle 401 Unauthorized errors
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
-
-            try {
-                // TODO: Implement refresh token logic here
-                // const refreshToken = store.getState().auth.refreshToken;
-                // const response = await apiClient.post('/auth/refresh', { refreshToken });
-                // store.dispatch(setCredentials(response.data));
-                
-                // Retry the original request
-                return apiClient(originalRequest);
-            } catch (refreshError) {
-                // If refresh token fails, logout user
-                store.dispatch({ type: 'auth/logout' });
-                return Promise.reject(refreshError);
-            }
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        try {
+          // TODO: Implement refresh token logic here
+          // const refreshToken = store.getState().auth.refreshToken;
+          // const response = await apiClient.post('/auth/refresh', { refreshToken });
+          // store.dispatch(setCredentials(response.data));
+          return apiClient(originalRequest);
+        } catch (refreshError) {
+          store.dispatch({ type: "auth/logout" });
+          return Promise.reject(refreshError);
         }
+      }
 
-        return Promise.reject(error);
+      return Promise.reject(error);
     }
 );
 

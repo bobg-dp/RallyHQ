@@ -18,11 +18,12 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Inicjalizacja klienta Supabase
-  const authHeader = req.headers.get("Authorization");
+  // Inicjalizacja klienta Supabase - token czytamy z niestandardowego nagłówka
+  const authHeader =
+    req.headers.get("x-access-token") ?? req.headers.get("authorization");
   if (!authHeader) {
     return new Response(
-      JSON.stringify({ error: "Missing Authorization header" }),
+      JSON.stringify({ error: "Missing auth token header" }),
       {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -68,7 +68,9 @@ export async function getCodrivers(): Promise<Codriver[]> {
     const response = await fetch(`${functionsUrl}/get-codrivers`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
     });
@@ -101,7 +103,9 @@ export async function addCodriver(
     const response = await fetch(`${functionsUrl}/add-codriver`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(codriver),
@@ -137,7 +141,9 @@ export async function updateCodriver(codriver: Codriver): Promise<Codriver> {
     const response = await fetch(`${functionsUrl}/update-codriver`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(codriver),
@@ -169,7 +175,9 @@ export async function deleteCodriver(id: string): Promise<void> {
     const response = await fetch(`${functionsUrl}/delete-codriver`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "x-access-token": `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ id }),
