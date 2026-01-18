@@ -13,18 +13,24 @@ export default function Navbar() {
   const [scrollY, setScrollY] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [canCreateRally, setCanCreateRally] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
   };
 
   useEffect(() => {
-    // Check if current user has permission to create rallies
+    // Re-check permission whenever auth state changes
+    if (!isAuthenticated) {
+      setCanCreateRally(false);
+      return;
+    }
+
     void (async () => {
       const allowed = await hasCreateRallyPermission();
       setCanCreateRally(allowed);
     })();
-  }, []);
+  }, [isAuthenticated, user?.id]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,77 +90,69 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-4">
             {/* Auth-aware buttons */}
-            {(() => {
-              const { isAuthenticated, logout } = useAuth();
-
-              if (isAuthenticated) {
-                return (
-                  <>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Link
-                        to="/dashboard"
-                        className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
-                      >
-                        Dashboard
-                      </Link>
-                    </motion.div>
-                    {canCreateRally && (
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Link
-                          to="/create-rally"
-                          className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
-                        >
-                          Utwórz rajd
-                        </Link>
-                      </motion.div>
-                    )}
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button
-                        onClick={logout}
-                        className="bg-destructive hover:bg-destructive/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                      >
-                        Wyloguj
-                      </Button>
-                    </motion.div>
-                  </>
-                );
-              }
-
-              return (
-                <>
+            {isAuthenticated ? (
+              <>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link
+                    to="/dashboard"
+                    className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                </motion.div>
+                {canCreateRally && (
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <Link
-                      to="/login"
+                      to="/create-rally"
                       className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
                     >
-                      Logowanie
+                      Utwórz rajd
                     </Link>
                   </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                )}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    onClick={logout}
+                    className="bg-destructive hover:bg-destructive/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                   >
-                    <Link to="/rejestracja">
-                      <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                        Rejestracja
-                      </Button>
-                    </Link>
-                  </motion.div>
-                </>
-              );
-            })()}
+                    Wyloguj
+                  </Button>
+                </motion.div>
+              </>
+            ) : (
+              <>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link
+                    to="/login"
+                    className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
+                  >
+                    Logowanie
+                  </Link>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link to="/rejestracja">
+                    <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                      Rejestracja
+                    </Button>
+                  </Link>
+                </motion.div>
+              </>
+            )}
           </div>
 
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>

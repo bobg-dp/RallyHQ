@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch } from "@/lib/store";
 import { addToast } from "@/lib/store/slices/uiSlice";
-import { supabase } from "@/lib/supabase/client";
+import { hasCreateRallyPermission } from "@/lib/api/services/permissions.service";
 
 const paymentMethodOptions = [
   { value: "credit_card", label: "Karta kredytowa" },
@@ -67,39 +67,9 @@ export default function CreateRally() {
       try {
         setPermissionError(null);
         setCanCreateRally("loading");
+        const allowed = await hasCreateRallyPermission();
 
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          throw sessionError;
-        }
-
-        if (!session) {
-          setCanCreateRally("forbidden");
-          setPermissionError(
-            "Nie masz uprawnień do tworzenia rajdów. Skontaktuj się z administratorem."
-          );
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from("user_permissions")
-          .select("permission")
-          .eq("permission", "create_rally");
-
-        if (error) {
-          console.error("Error checking permissions", error);
-          setCanCreateRally("forbidden");
-          setPermissionError(
-            "Nie udało się sprawdzić uprawnień do tworzenia rajdów."
-          );
-          return;
-        }
-
-        if (data && data.length > 0) {
+        if (allowed) {
           setCanCreateRally("allowed");
         } else {
           setCanCreateRally("forbidden");
@@ -386,7 +356,7 @@ export default function CreateRally() {
                   </div>
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium mb-1">
                     Metody płatności
                   </label>
@@ -411,7 +381,7 @@ export default function CreateRally() {
                       {errors.paymentMethods.message as string}
                     </p>
                   )}
-                </div>
+                </div> */}
               </section>
 
               {/* Pliki */}
